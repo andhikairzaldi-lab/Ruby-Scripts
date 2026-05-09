@@ -1,63 +1,70 @@
-local ToggleFarm = false
+local ToggleGod = false
 local ScreenGui = Instance.new("ScreenGui")
 local Frame = Instance.new("Frame")
-local Button = Instance.new("TextButton")
+local ButtonTP = Instance.new("TextButton")
+local ButtonGod = Instance.new("TextButton")
 
--- Setup UI Dasar
+-- UI Setup
 ScreenGui.Parent = game.CoreGui
 Frame.Parent = ScreenGui
-Frame.Size = UDim2.new(0, 220, 0, 100)
+Frame.Size = UDim2.new(0, 200, 0, 120)
 Frame.Position = UDim2.new(0.4, 0, 0.4, 0)
-Frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 Frame.Active = true
 Frame.Draggable = true
 
-Button.Parent = Frame
-Button.Size = UDim2.new(0.9, 0, 0.8, 0)
-Button.Position = UDim2.new(0.05, 0, 0.1, 0)
-Button.BackgroundColor3 = Color3.fromRGB(0, 120, 255)
-Button.Text = "START ALL (TP+GOD+PERFECT)"
-Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-Button.TextScaled = true
+ButtonTP.Parent = Frame
+ButtonTP.Size = UDim2.new(0.9, 0, 0.4, 0)
+ButtonTP.Position = UDim2.new(0.05, 0, 0.05, 0)
+ButtonTP.Text = "TELEPORT KE FARM"
+ButtonTP.TextScaled = true
 
--- Fungsi Utama
-Button.MouseButton1Click:Connect(function()
-    ToggleFarm = not ToggleFarm
-    Button.Text = ToggleFarm and "AUTO: ON" or "OFF (RESET CHARACTER)"
-    Button.BackgroundColor3 = ToggleFarm and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
+ButtonGod.Parent = Frame
+ButtonGod.Size = UDim2.new(0.9, 0, 0.4, 0)
+ButtonGod.Position = UDim2.new(0.05, 0, 0.5, 0)
+ButtonGod.Text = "GOD MODE: OFF"
+ButtonGod.TextScaled = true
+
+-- 1. TELEPORT MANUAL (Sekali Klik)
+ButtonTP.MouseButton1Click:Connect(function()
+    local root = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if root then
+        root.CFrame = CFrame.new(690, 5, 232)
+    end
+end)
+
+-- 2. GOD MODE (Lock Health Passive)
+ButtonGod.MouseButton1Click:Connect(function()
+    ToggleGod = not ToggleGod
+    ButtonGod.Text = ToggleGod and "GOD MODE: ON" or "GOD MODE: OFF"
+    ButtonGod.BackgroundColor3 = ToggleGod and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
     
-    local player = game.Players.LocalPlayer
-    local network = game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Packages"):WaitForChild("Network")
-    local kickEvent = network:WaitForChild("rev_KickEvent")
-    local kickCollect = network:WaitForChild("rev_KickCollect")
+    task.spawn(function()
+        while ToggleGod do
+            local hum = game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if hum then hum.Health = hum.MaxHealth end
+            task.wait(0.1)
+        end
+    end)
+end)
 
-    if ToggleFarm then
-        task.spawn(function()
-            while ToggleFarm do
-                local char = player.Character
-                local hum = char and char:FindFirstChildOfClass("Humanoid")
-                local root = char and char:FindFirstChild("HumanoidRootPart")
-
-                if root and hum then
-                    -- 1. KEBAL (God Mode dengan Lock Health)
-                    hum.Health = hum.MaxHealth
-                    
-                    -- 2. TELEPORT (Ke koordinat yang kamu kasih: 690, 5, 232)
-                    -- Gunakan lerp atau pindah langsung jika jarak terlalu jauh
-                    if (root.Position - Vector3.new(690, 5, 232)).Magnitude > 5 then
-                        root.CFrame = CFrame.new(690, 5, 232)
-                    end
-
-                    -- 3. PERFECT KICK & COLLECT (Berdasarkan hasil Spy kamu)
-                    kickEvent:FireServer(1) -- Angka 1 dari hasil Spy
-                    task.wait(0.3) -- Jeda agar server tidak mendeteksi spam
-                    kickCollect:FireServer()
-                end
-                task.wait(0.7) -- Jeda antar putaran agar tidak Error 267
+-- 3. AUTO PERFECT PASSIVE (Membaca UI Meteran)
+-- Skrip ini akan menunggu bar muncul dan mengkliknya saat penuh
+task.spawn(function()
+    local vim = game:GetService("VirtualInputManager")
+    while true do
+        task.wait()
+        -- Cari UI meteran di PlayerGui (nama Bar biasanya 'PowerBar' atau 'Bar')
+        -- Ganti "PowerBar" dengan nama asli objek meteran di game tersebut
+        local gui = game.Players.LocalPlayer.PlayerGui:FindFirstChild("PowerBar", true) 
+        if gui and gui.Visible then
+            -- Logika: Jika besar Bar sudah mencapai > 95%
+            if gui.Size.X.Scale >= 0.95 then
+                vim:SendMouseButtonEvent(0, 0, 0, true, game, 0)
+                task.wait(0.01)
+                vim:SendMouseButtonEvent(0, 0, 0, false, game, 0)
+                task.wait(1) -- Jeda agar tidak klik berkali-kali
             end
-        end)
-    else
-        -- Jika dimatikan, reset karakter agar status kebal/bug hilang
-        player.Character:BreakJoints()
+        end
     end
 end)

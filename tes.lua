@@ -13,7 +13,7 @@ Frame.Draggable = true -- Biar jendelanya bisa digeser
 
 TextLabel.Parent = Frame
 TextLabel.Size = UDim2.new(1, 0, 1, 0)
-TextLabel.Text = "Halo Ruby!"
+TextLabel.Text = "Halo Ruby izar, ini ruby yang bawel!"
 TextLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TextLabel.BackgroundTransparency = 1
 

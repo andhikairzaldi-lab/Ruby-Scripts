@@ -36,30 +36,34 @@ ButtonTP.MouseButton1Click:Connect(function()
         char.HumanoidRootPart.CFrame = CFrame.new(690, 5, 232)
     end
 end)
-
--- FUNGSI KEBAL (God Mode Dasar)
+-- FUNGSI KEBAL (Metode State)
 ButtonGod.MouseButton1Click:Connect(function()
     ToggleGod = not ToggleGod
     ButtonGod.Text = ToggleGod and "KEBAL: ON" or "KEBAL: OFF"
     ButtonGod.BackgroundColor3 = ToggleGod and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
     
     local player = game.Players.LocalPlayer
-    
-    if ToggleGod then
-        -- Teknik: Menghapus bagian tubuh yang bisa menerima Damage (Humanoid)
-        -- Lalu menggantinya dengan Humanoid baru tanpa koneksi ke server
-        local char = player.Character
-        if char then
-            local hum = char:FindFirstChildOfClass("Humanoid")
-            if hum then
-                hum.Parent = nil -- Melepas humanoid dari karakter
-                local newHum = hum:Clone()
-                newHum.Parent = char
-                player.Character = char
-            end
+    local char = player.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+
+    if hum then
+        if ToggleGod then
+            -- Mematikan semua perubahan status (termasuk pengurangan darah)
+            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+            hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+            hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+            
+            -- Mencoba mengunci darah di angka maksimal
+            task.spawn(function()
+                while ToggleGod do
+                    hum.Health = hum.MaxHealth
+                    task.wait()
+                end
+            end)
+        else
+            -- Mengembalikan fungsi normal
+            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+            char:BreakJoints() -- Reset karakter agar normal kembali
         end
-    else
-        -- Matikan kebal dengan mereset karakter
-        player.Character:BreakJoints()
     end
 end)

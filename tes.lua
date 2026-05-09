@@ -9,7 +9,7 @@ Frame.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 Frame.Position = UDim2.new(0.3, 0, 0.3, 0)
 Frame.Size = UDim2.new(0, 200, 0, 100)
 Frame.Active = true
-Frame.Draggable = true -- Biar jendelanya bisa digeser
+Frame.Draggable = true
 
 TextLabel.Parent = Frame
 TextLabel.Size = UDim2.new(1, 0, 1, 0)

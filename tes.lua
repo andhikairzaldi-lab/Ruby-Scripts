@@ -33,25 +33,25 @@ Button.MouseButton1Click:Connect(function()
 
     task.spawn(function() -- Menggunakan spawn agar tidak menahan fungsi tombol
         while Toggle do
-            local player = game.Players.LocalPlayer
-            local char = player.Character
-            
-            if char and char:FindFirstChild("HumanoidRootPart") then
-                -- 1. Pastikan di lokasi (Teleport ke koordinat Izar)
-                char.HumanoidRootPart.CFrame = CFrame.new(690, 5, 232)
-                
-                -- 2. Kirim sinyal Tendang (Gunakan args [1] = 1 seperti hasil spy kamu)
-                kickEvent:FireServer(1) 
-                
-                -- 3. Jeda singkat agar server memproses tendangan
-                task.wait(0.2) 
-                
-                -- 4. Kirim sinyal Ambil Hadiah
-                kickCollect:FireServer()
-            end
-            
-            -- Jeda antar putaran (sesuaikan kalau dirasa terlalu cepat/lambat)
-            task.wait(0.5) 
+    local player = game.Players.LocalPlayer
+    local char = player.Character
+    
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        -- 1. Teleport hanya sesekali (tidak setiap detik)
+        local dist = (char.HumanoidRootPart.Position - Vector3.new(690, 5, 232)).Magnitude
+        if dist > 10 then -- Hanya teleport kalau jaraknya lebih dari 10 stud
+            char.HumanoidRootPart.CFrame = CFrame.new(690, 5, 232)
         end
-    end)
-end)
+        
+        -- 2. Beri jeda acak (Randomize) agar tidak terlihat seperti robot
+        task.wait(math.random(2, 4)) -- Jeda antara 2 sampai 4 detik
+        
+        -- 3. Kirim sinyal
+        kickEvent:FireServer(1)
+        task.wait(0.5) 
+        kickCollect:FireServer()
+    end
+    
+    task.wait(1) -- Jeda antar putaran lebih lama
+                end
+                

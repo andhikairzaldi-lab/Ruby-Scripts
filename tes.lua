@@ -1,67 +1,60 @@
-local ToggleGod = false
-local TogglePerfect = false
 local ScreenGui = Instance.new("ScreenGui")
 local Frame = Instance.new("Frame")
+local ButtonTP = Instance.new("TextButton")
+local ButtonPerfect = Instance.new("TextButton")
+local TogglePerfect = false
 
--- UI Setup
+-- UI Setup (Minimalis agar tidak lag)
 ScreenGui.Parent = game.CoreGui
 Frame.Parent = ScreenGui
-Frame.Size = UDim2.new(0, 200, 0, 150)
+Frame.Size = UDim2.new(0, 180, 0, 100)
 Frame.Position = UDim2.new(0.4, 0, 0.4, 0)
-Frame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Frame.Active = true
 Frame.Draggable = true
 
-local function createBtn(text, pos, color)
-    local btn = Instance.new("TextButton")
-    btn.Parent = Frame
-    btn.Size = UDim2.new(0.9, 0, 0.4, 0)
-    btn.Position = pos
-    btn.Text = text
-    btn.BackgroundColor3 = color
-    btn.TextColor3 = Color3.new(1,1,1)
-    btn.TextScaled = true
-    return btn
-end
+ButtonTP.Parent = Frame
+ButtonTP.Size = UDim2.new(0.9, 0, 0.4, 0)
+ButtonTP.Position = UDim2.new(0.05, 0, 0.05, 0)
+ButtonTP.Text = "TP KE FARM"
+ButtonTP.TextScaled = true
 
-local ButtonTP = createBtn("TELEPORT", UDim2.new(0.05, 0, 0.05, 0), Color3.fromRGB(0, 120, 255))
-local ButtonFarm = createBtn("AUTO PERFECT: OFF", UDim2.new(0.05, 0, 0.5, 0), Color3.fromRGB(150, 0, 0))
+ButtonPerfect.Parent = Frame
+ButtonPerfect.Size = UDim2.new(0.9, 0, 0.4, 0)
+ButtonPerfect.Position = UDim2.new(0.05, 0, 0.55, 0)
+ButtonPerfect.Text = "AUTO PERFECT: OFF"
+ButtonPerfect.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+ButtonPerfect.TextScaled = true
 
--- 1. TELEPORT KE KOORDINAT (690, 5, 232)
+-- 1. TELEPORT MANUAL
 ButtonTP.MouseButton1Click:Connect(function()
     local root = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if root then root.CFrame = CFrame.new(690, 5, 232) end
 end)
 
--- 2. AUTO PERFECT + GOD MODE (GABUNGAN)
-ButtonFarm.MouseButton1Click:Connect(function()
-    TogglePerfect = not TogglePerfect
-    ButtonFarm.Text = TogglePerfect and "AUTO PERFECT: ON" or "AUTO PERFECT: OFF"
-    ButtonFarm.BackgroundColor3 = TogglePerfect and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
-    
-    local network = game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Packages"):WaitForChild("Network")
-    local kickEvent = network:WaitForChild("rev_KickEvent")
-    local kickCollect = network:WaitForChild("rev_KickCollect")
+-- 2. LOGIKA AUTO PERFECT (SABOTASE REMOTE)
+local network = game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Packages"):WaitForChild("Network")
+local kickEvent = network:WaitForChild("rev_KickEvent")
 
-    task.spawn(function()
-        while TogglePerfect do
-            local char = game.Players.LocalPlayer.Character
-            local hum = char and char:FindFirstChildOfClass("Humanoid")
-            
-            if hum then
-                -- GOD MODE PASSIVE
-                hum.Health = hum.MaxHealth
-                hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-                
-                -- TEMBAK PERFECT (Angka 1 atau 100 coba tes mana yang paling jauh)
-                -- Gunakan pcall supaya kalau error tidak bikin script mati
-                pcall(function()
-                    kickEvent:FireServer(1) 
-                    task.wait(0.5) -- JEDA WAJIB: Biar gak kena kick Suspicious Activity
-                    kickCollect:FireServer()
-                end)
-            end
-            task.wait(1.5) -- JEDA ANTAR TENDANGAN: Harus cukup lama biar aman
-        end
-    end)
+ButtonPerfect.MouseButton1Click:Connect(function()
+    TogglePerfect = not TogglePerfect
+    ButtonPerfect.Text = TogglePerfect and "AUTO PERFECT: ON" or "AUTO PERFECT: OFF"
+    ButtonPerfect.BackgroundColor3 = TogglePerfect and Color3.fromRGB(0, 150, 0) or Color3.fromRGB(150, 0, 0)
+end)
+
+-- Metatable Hooking: Mengganti isi tendangan menjadi Perfect secara otomatis
+local oldNamecall
+oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
+    local args = {...}
+    local method = getnamecallmethod()
+
+    -- Jika game mencoba mengirim 'rev_KickEvent'
+    if TogglePerfect and self == kickEvent and method == "FireServer" then
+        -- Kita paksa isinya jadi Perfect (misal angka 1 atau 100)
+        -- Kamu bisa ganti angka [1] di bawah ini sesuai hasil eksperimen
+        args[1] = 1 
+        return oldNamecall(self, unpack(args))
+    end
+
+    return oldNamecall(self, ...)
 end)

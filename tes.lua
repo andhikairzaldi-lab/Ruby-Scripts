@@ -19,6 +19,13 @@ ButtonTP.Position = UDim2.new(0.05, 0, 0.05, 0)
 ButtonTP.Text = "TP KE FARM"
 ButtonTP.TextScaled = true
 
+ButtonGod.Parent = Frame
+ButtonGod.Size = UDim2.new(0.9, 0, 0.4, 0)
+ButtonGod.Position = UDim2.new(0.05, 0, 0.5, 0)
+ButtonGod.BackgroundColor3 = Color3.fromRGB(200, 0, 0)
+ButtonGod.Text = "KEBAL: OFF"
+ButtonGod.TextScaled = true
+
 ButtonPerfect.Parent = Frame
 ButtonPerfect.Size = UDim2.new(0.9, 0, 0.4, 0)
 ButtonPerfect.Position = UDim2.new(0.05, 0, 0.55, 0)
@@ -30,6 +37,38 @@ ButtonPerfect.TextScaled = true
 ButtonTP.MouseButton1Click:Connect(function()
     local root = game.Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if root then root.CFrame = CFrame.new(690, 5, 232) end
+end)
+
+-- 1. GOD MODE
+ButtonGod.MouseButton1Click:Connect(function()
+    ToggleGod = not ToggleGod
+    ButtonGod.Text = ToggleGod and "KEBAL: ON" or "KEBAL: OFF"
+    ButtonGod.BackgroundColor3 = ToggleGod and Color3.fromRGB(0, 200, 0) or Color3.fromRGB(200, 0, 0)
+    
+    local player = game.Players.LocalPlayer
+    local char = player.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+
+    if hum then
+        if ToggleGod then
+            -- Mematikan semua perubahan status (termasuk pengurangan darah)
+            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+            hum:SetStateEnabled(Enum.HumanoidStateType.FallingDown, false)
+            hum:SetStateEnabled(Enum.HumanoidStateType.Ragdoll, false)
+            
+            -- Mencoba mengunci darah di angka maksimal
+            task.spawn(function()
+                while ToggleGod do
+                    hum.Health = hum.MaxHealth
+                    task.wait()
+                end
+            end)
+        else
+            -- Mengembalikan fungsi normal
+            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+            char:BreakJoints() -- Reset karakter agar normal kembali
+        end
+    end
 end)
 
 -- 2. LOGIKA AUTO PERFECT (SABOTASE REMOTE)
